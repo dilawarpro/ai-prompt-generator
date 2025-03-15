@@ -658,6 +658,7 @@ body.dark-mode .card:hover {
 }
 
 .premium-badge a {
+    margin-right: 90px;
     display: inline-flex;
     align-items: center;
     color: white;
