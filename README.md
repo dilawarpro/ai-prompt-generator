@@ -41,17 +41,6 @@ The image-to-prompt feature works by:
 
 *Note: In a production environment, this would typically use an AI vision API for image analysis. This demo version simulates the functionality client-side.*
 
-## Installation
-
-No installation required! Simply download the files and open `index.html` in your web browser.
-
-```
-git clone https://github.com/yourusername/ai-prompt-generator.git
-cd ai-prompt-generator
-```
-
-Then open `index.html` in your browser.
-
 ## Customization
 
 You can easily customize the application by:
@@ -59,12 +48,6 @@ You can easily customize the application by:
 - Modifying the CSS in `styles.css` to change the appearance
 - Adding new templates in the `promptTemplates` object in `script.js`
 - Extending functionality by adding new options or features
-
-## License
-
-MIT License - Feel free to use, modify, and distribute this code for personal or commercial projects.
-
-## Acknowledgements
 
 - [Bootstrap](https://getbootstrap.com/)
 - [Font Awesome](https://fontawesome.com/) 
