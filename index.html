@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Generator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-robot"></i> AI Prompt Generator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="nav-home"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-templates"><i class="fas fa-layer-group"></i> Templates</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-history"><i class="fas fa-history"></i> History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-settings"><i class="fas fa-cog"></i> Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-about"><i class="fas fa-info-circle"></i> About</a>
+                    </li>
+                    <li class="nav-item">
+                        <div class="prompt-counter-container">
+                            <span class="prompt-counter-label"><i class="fas fa-bolt"></i> Prompts:</span>
+                            <span id="prompt-counter" class="prompt-counter">0/20</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Prompt Limit Modal -->
+    <div class="modal fade" id="promptLimitModal" tabindex="-1" aria-labelledby="promptLimitModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="promptLimitModalLabel"><i class="fas fa-exclamation-circle text-warning"></i> Daily Prompt Limit Reached</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You've reached your daily limit of 20 prompts.</p>
+                    <p>Support the developer with a coffee to get unlimited prompts for 30 days!</p>
+                    <div class="text-center my-3">
+                        <a href="https://www.buymeacoffee.com/dilawar" target="_blank" class="btn btn-warning">
+                            <i class="fas fa-coffee"></i> Buy Me A Coffee
+                        </a>
+                    </div>
+                    <p class="text-muted small">Your prompt limit will reset in <span id="limit-reset-time">24 hours</span>.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Status Modal -->
+    <div class="modal fade" id="premiumStatusModal" tabindex="-1" aria-labelledby="premiumStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="premiumStatusModalLabel"><i class="fas fa-star text-warning"></i> Premium Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="premium-active" class="d-none">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-check-circle text-success fa-3x"></i>
+                        </div>
+                        <h5 class="text-center">Premium Status Active</h5>
+                        <p>Thank you for your support! You have unlimited prompts until <span id="premium-expiry-date">date</span>.</p>
+                    </div>
+                    <div id="premium-inactive">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-star text-warning fa-3x"></i>
+                        </div>
+                        <h5 class="text-center">Get Premium Access</h5>
+                        <p>Support the developer with a coffee to get unlimited prompts for 30 days!</p>
+                        <div class="text-center my-3">
+                            <a href="https://www.buymeacoffee.com/dilawar" target="_blank" class="btn btn-warning">
+                                <i class="fas fa-coffee"></i> Buy Me A Coffee
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid main-container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3 sidebar">
+                <div class="sidebar-header">
+                    <h3><i class="fas fa-sliders"></i> Prompt Controls</h3>
+                </div>
+                <div class="sidebar-content">
+                    <div class="template-section">
+                        <h5><i class="fas fa-list"></i> Prompt Templates</h5>
+                        <div class="list-group">
+                            <button class="list-group-item list-group-item-action" data-template="creative">
+                                <i class="fas fa-lightbulb"></i> Creative Writing
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-template="academic">
+                                <i class="fas fa-graduation-cap"></i> Academic
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-template="business">
+                                <i class="fas fa-briefcase"></i> Business
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-template="technical">
+                                <i class="fas fa-code"></i> Technical
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-template="image">
+                                <i class="fas fa-image"></i> Image Description
+                            </button>
+                        </div>
+                    </div>
+                    <div class="history-section mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5><i class="fas fa-history"></i> History</h5>
+                            <div>
+                                <button class="btn btn-sm btn-outline-danger" id="clearHistory" title="Clear All History">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="history-list" class="list-group">
+                            <!-- History items will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9 main-content">
+                <!-- Main content sections -->
+                <div id="home-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" id="promptTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-content" type="button" role="tab" aria-controls="text-content" aria-selected="true">
+                                        <i class="fas fa-font"></i> Text to Prompt
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="image-tab" data-bs-toggle="tab" data-bs-target="#image-content" type="button" role="tab" aria-controls="image-content" aria-selected="false">
+                                        <i class="fas fa-image"></i> Image to Prompt
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="promptTabContent">
+                                <!-- Text to Prompt Tab -->
+                                <div class="tab-pane fade show active" id="text-content" role="tabpanel" aria-labelledby="text-tab">
+                                    <div class="mb-3">
+                                        <label for="userInput" class="form-label">Your Message</label>
+                                        <textarea class="form-control" id="userInput" rows="5" placeholder="Enter your message here..."></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Options</label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="formalitySwitch">
+                                                    <label class="form-check-label" for="formalitySwitch">Formal Tone</label>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="detailSwitch">
+                                                    <label class="form-check-label" for="detailSwitch">Add Details</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="creativeSwitch">
+                                                    <label class="form-check-label" for="creativeSwitch">Creative Mode</label>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="instructionSwitch">
+                                                    <label class="form-check-label" for="instructionSwitch">Add Instructions</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary" id="generateTextPrompt">
+                                            <i class="fas fa-magic"></i> Generate Prompt
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Image to Prompt Tab -->
+                                <div class="tab-pane fade" id="image-content" role="tabpanel" aria-labelledby="image-tab">
+                                    <div class="mb-3">
+                                        <label for="imageUpload" class="form-label">Upload Image</label>
+                                        <input class="form-control" type="file" id="imageUpload" accept="image/*">
+                                    </div>
+                                    <div class="mb-3 image-preview-container d-none">
+                                        <label class="form-label">Image Preview</label>
+                                        <div class="image-preview">
+                                            <img id="imagePreview" src="#" alt="Preview" class="img-fluid rounded">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="imageContext" class="form-label">Additional Context (Optional)</label>
+                                        <textarea class="form-control" id="imageContext" rows="3" placeholder="Add any additional context about the image..."></textarea>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary" id="generateImagePrompt" disabled>
+                                            <i class="fas fa-image"></i> Generate Image Prompt
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Card -->
+                    <div class="card mt-4 result-card d-none">
+                        <div class="card-header">
+                            <h5><i class="fas fa-check-circle"></i> Generated Prompt</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label for="generatedPrompt" class="form-label mb-0">Your AI Prompt</label>
+                                    <button class="btn btn-sm btn-outline-primary" id="copyPrompt">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <textarea class="form-control" id="generatedPrompt" rows="6" readonly></textarea>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-outline-secondary" id="editPrompt">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-success" id="savePrompt">
+                                    <i class="fas fa-save"></i> Save to History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Section -->
+                <div id="templates-section" class="content-section d-none">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-layer-group"></i> Prompt Templates</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Browse and select from our collection of prompt templates to enhance your AI interactions.</p>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card template-card">
+                                        <div class="card-body">
+                                            <h5 class="card-title"><i class="fas fa-lightbulb text-warning"></i> Creative Writing</h5>
+                                            <p class="card-text">Perfect for storytelling, poetry, and creative content generation.</p>
+                                            <button class="btn btn-sm btn-outline-primary" data-template="creative">Use Template</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card template-card">
+                                        <div class="card-body">
+                                            <h5 class="card-title"><i class="fas fa-graduation-cap text-info"></i> Academic</h5>
+                                            <p class="card-text">Ideal for research papers, essays, and scholarly content.</p>
+                                            <button class="btn btn-sm btn-outline-primary" data-template="academic">Use Template</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card template-card">
+                                        <div class="card-body">
+                                            <h5 class="card-title"><i class="fas fa-briefcase text-success"></i> Business</h5>
+                                            <p class="card-text">For professional communications, reports, and business content.</p>
+                                            <button class="btn btn-sm btn-outline-primary" data-template="business">Use Template</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card template-card">
+                                        <div class="card-body">
+                                            <h5 class="card-title"><i class="fas fa-code text-danger"></i> Technical</h5>
+                                            <p class="card-text">For coding, technical documentation, and explanations.</p>
+                                            <button class="btn btn-sm btn-outline-primary" data-template="technical">Use Template</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div id="history-section" class="content-section d-none">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-history"></i> Prompt History</h5>
+                            <button class="btn btn-sm btn-outline-danger" id="clearHistoryBtn">
+                                <i class="fas fa-trash-alt"></i> Clear All
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="history-container">
+                                <!-- History items will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings-section" class="content-section d-none">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-cog"></i> Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Appearance</h6>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                                    <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <h6>History</h6>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="saveHistorySwitch" checked>
+                                    <label class="form-check-label" for="saveHistorySwitch">Save History</label>
+                                </div>
+                                <div class="mt-2">
+                                    <label for="historyLimitSelect" class="form-label">Maximum History Items</label>
+                                    <select class="form-select" id="historyLimitSelect">
+                                        <option value="5">5 items</option>
+                                        <option value="10" selected>10 items</option>
+                                        <option value="20">20 items</option>
+                                        <option value="50">50 items</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <h6>Default Options</h6>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="defaultFormalitySwitch">
+                                    <label class="form-check-label" for="defaultFormalitySwitch">Formal Tone</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="defaultDetailSwitch">
+                                    <label class="form-check-label" for="defaultDetailSwitch">Add Details</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="defaultCreativeSwitch">
+                                    <label class="form-check-label" for="defaultCreativeSwitch">Creative Mode</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="defaultInstructionSwitch">
+                                    <label class="form-check-label" for="defaultInstructionSwitch">Add Instructions</label>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" id="saveSettings">
+                                    <i class="fas fa-save"></i> Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Section -->
+                <div id="about-section" class="content-section d-none">
+                    <div class="container">
+                        <h2 class="mb-4">About AI Prompt Generator</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">What is AI Prompt Generator?</h5>
+                                <p class="card-text">
+                                    AI Prompt Generator is a tool designed to help you create effective prompts for AI systems like ChatGPT, DALL-E, and other AI models. 
+                                    A well-crafted prompt can significantly improve the quality of AI-generated content.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <h3 class="mb-3">User Manual</h3>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">How to Use This App</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="accordion" id="userManualAccordion">
+                                    <!-- Text Prompts -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingOne">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                Creating Text Prompts
+                                            </button>
+                                        </h2>
+                                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#userManualAccordion">
+                                            <div class="accordion-body">
+                                                <ol>
+                                                    <li><strong>Select the Text tab</strong> on the home page.</li>
+                                                    <li><strong>Enter your content</strong> in the text area.</li>
+                                                    <li><strong>Choose a template</strong> from the Templates page or use the default Creative Writing template.</li>
+                                                    <li><strong>Adjust options</strong> like formality, detail level, creativity, and instruction clarity as needed.</li>
+                                                    <li><strong>Click "Generate Prompt"</strong> to create your AI prompt.</li>
+                                                    <li>You can <strong>copy, edit, or save</strong> the generated prompt using the buttons below it.</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Image Prompts -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingTwo">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                                Creating Image Prompts
+                                            </button>
+                                        </h2>
+                                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#userManualAccordion">
+                                            <div class="accordion-body">
+                                                <ol>
+                                                    <li><strong>Select the Image tab</strong> on the home page.</li>
+                                                    <li><strong>Upload an image</strong> using the file selector.</li>
+                                                    <li><strong>Add context</strong> (optional) to provide additional information about the image.</li>
+                                                    <li><strong>Click "Generate Image Prompt"</strong> to create a prompt describing the image.</li>
+                                                    <li>The app will analyze the image filename and generate a description.</li>
+                                                    <li>You can <strong>copy, edit, or save</strong> the generated prompt using the buttons below it.</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Templates -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingThree">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                                Using Templates
+                                            </button>
+                                        </h2>
+                                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#userManualAccordion">
+                                            <div class="accordion-body">
+                                                <p>The app offers several templates to structure your prompts:</p>
+                                                <ul>
+                                                    <li><strong>Creative Writing:</strong> For creative and engaging content with vivid language.</li>
+                                                    <li><strong>Academic:</strong> For well-researched, academic analysis with relevant theories.</li>
+                                                    <li><strong>Business:</strong> For professional business responses with actionable insights.</li>
+                                                    <li><strong>Technical:</strong> For detailed technical explanations with implementation details.</li>
+                                                    <li><strong>Image Description:</strong> For describing images with visual elements and composition.</li>
+                                                </ul>
+                                                <p>To use a template:</p>
+                                                <ol>
+                                                    <li>Go to the <strong>Templates</strong> page from the navbar.</li>
+                                                    <li><strong>Click on a template</strong> to select it.</li>
+                                                    <li>The app will automatically switch to the appropriate tab and apply the template.</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- History -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingFour">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                                Managing History
+                                            </button>
+                                        </h2>
+                                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#userManualAccordion">
+                                            <div class="accordion-body">
+                                                <p>The app saves your generated prompts for future reference:</p>
+                                                <ol>
+                                                    <li>Click <strong>Save</strong> on a generated prompt to add it to your history.</li>
+                                                    <li>Access your saved prompts from the <strong>History</strong> page.</li>
+                                                    <li>For each history item, you can:
+                                                        <ul>
+                                                            <li><strong>Load:</strong> Bring the prompt back to the generator.</li>
+                                                            <li><strong>Edit:</strong> Modify the title or content of the saved prompt.</li>
+                                                            <li><strong>Delete:</strong> Remove the prompt from your history.</li>
+                                                        </ul>
+                                                    </li>
+                                                    <li>Use <strong>Clear History</strong> to remove all saved prompts.</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Settings -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingFive">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                                Customizing Settings
+                                            </button>
+                                        </h2>
+                                        <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#userManualAccordion">
+                                            <div class="accordion-body">
+                                                <p>Customize the app behavior in the <strong>Settings</strong> page:</p>
+                                                <ul>
+                                                    <li><strong>Dark Mode:</strong> Toggle between light and dark themes.</li>
+                                                    <li><strong>Save History:</strong> Enable or disable saving prompts to history.</li>
+                                                    <li><strong>History Limit:</strong> Set the maximum number of history items to keep.</li>
+                                                    <li><strong>Default Options:</strong> Set default values for formality, detail, creativity, and instruction clarity.</li>
+                                                </ul>
+                                                <p>Click <strong>Save Settings</strong> to apply your changes.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Tips for Effective Prompts</h5>
+                                <ul>
+                                    <li><strong>Be specific:</strong> Clearly state what you want the AI to do.</li>
+                                    <li><strong>Provide context:</strong> Give background information when necessary.</li>
+                                    <li><strong>Set constraints:</strong> Specify length, format, tone, or style requirements.</li>
+                                    <li><strong>Use examples:</strong> Provide examples of the desired output when possible.</li>
+                                    <li><strong>Iterate:</strong> Refine your prompts based on the AI's responses.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+                                    <h4>AI Prompt Generator</h4>
+                                    <p class="text-muted">Version 1.1.0</p>
+                                </div>
+                                <h6>Features</h6>
+                                <ul>
+                                    <li>Text to Prompt Conversion</li>
+                                    <li>Image to Prompt Conversion</li>
+                                    <li>Multiple Templates</li>
+                                    <li>Customization Options</li>
+                                    <li>Prompt History Management</li>
+                                    <li>Responsive Design</li>
+                                </ul>
+                                <h6>Technologies Used</h6>
+                                <div class="d-flex justify-content-center gap-4 mb-3">
+                                    <div class="text-center">
+                                        <i class="fab fa-html5 fa-2x text-danger"></i>
+                                        <p>HTML5</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fab fa-css3-alt fa-2x text-primary"></i>
+                                        <p>CSS3</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fab fa-js fa-2x text-warning"></i>
+                                        <p>JavaScript</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fab fa-bootstrap fa-2x text-purple"></i>
+                                        <p>Bootstrap</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="fab fa-font-awesome fa-2x text-info"></i>
+                                        <p>Font Awesome</p>
+                                    </div>
+                                </div>
+                                <p class="text-center mt-4">
+                                    <small class="text-muted">© 2023 AI Prompt Generator. All rights reserved.</small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <p>Made with <i class="fas fa-heart heart"></i> By <a href="https://dilawarpro.com" style="color: white;">Dilawar</a> for AI lovers</p>
+                <div class="premium-badge" id="premium-badge">
+                    <a href="#" id="show-premium-status">
+                        <i class="fas fa-star"></i> <span id="premium-status-text">Free</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- History Item Edit Modal -->
+    <div class="modal fade" id="editHistoryModal" tabindex="-1" aria-labelledby="editHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editHistoryModalLabel"><i class="fas fa-edit"></i> Edit Saved Prompt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editHistoryTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="editHistoryTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editHistoryPrompt" class="form-label">Prompt</label>
+                        <textarea class="form-control" id="editHistoryPrompt" rows="6"></textarea>
+                    </div>
+                    <input type="hidden" id="editHistoryId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveHistoryEdit">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="script.js"></script>
+    <!-- Buy Me A Coffee Widget -->
+    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="dilawar" data-description="Support me on Buy me a coffee!" data-message="" data-color="#BD5FFF" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+</body>
+</html>
